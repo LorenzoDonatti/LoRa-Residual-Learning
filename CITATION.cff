@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: >-
   If you use these experiments, please cite the companion manuscript and the
   original Bonn dataset publication listed in README.md. This entry describes
-  the software accompanying the JCIS manuscript, not an accepted journal article.
+  the software accompanying the IEEE Access manuscript, not an accepted journal article.
 type: software
 title: "When Does Residual Learning Improve LoRa Path-Loss Prediction?"
 authors:
@@ -20,7 +20,7 @@ authors:
     orcid: "https://orcid.org/0000-0003-4454-6809"
 repository-code: "https://github.com/LorenzoDonatti/LoRa-Residual-Learning"
 abstract: >-
-  Minimal numerical implementation accompanying the JCIS manuscript. Compares
+  Minimal numerical implementation accompanying the IEEE Access manuscript. Compares
   direct and residual LoRa path-loss ensembles with matched receiver information,
   grouped and buffered spatial validation, sample-count controls, and receiver
   holdouts on public Bonn measurements. Exports metrics, conditional paired

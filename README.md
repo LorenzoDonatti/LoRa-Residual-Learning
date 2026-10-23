@@ -11,8 +11,8 @@ Federal University of Santa Maria (UFSM), Santa Maria, Brazil.
 **Corresponding author:** Carlos Henrique Barriquello — carlos.barriquello@ufsm.br.
 
 This repository accompanies *When Does Residual Learning Improve LoRa Path-Loss
-Prediction?*, the manuscript prepared for the **Journal of Communication and
-Information Systems (JCIS)**. It provides a compact implementation of its main
+Prediction?*, the manuscript prepared for **IEEE Access**.
+It provides a compact implementation of its main
 numerical experiments, comparing classical propagation models, direct machine
 learning, and residual learning on public urban LoRa measurements from Bonn, Germany.
 The manuscript is not identified here as an accepted or published journal article;
@@ -369,7 +369,7 @@ record when available.
             Barriquello, Carlos Henrique},
   title = {When Does Residual Learning Improve {LoRa} Path-Loss Prediction?},
   year = {2026},
-  note = {Research manuscript prepared for the Journal of Communication and Information Systems},
+  note = {Research manuscript prepared for IEEE Access},
   howpublished = {Companion implementation: \url{https://github.com/LorenzoDonatti/LoRa-Residual-Learning}}
 }
 ```
