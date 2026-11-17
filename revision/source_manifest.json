@@ -1,0 +1,19 @@
+{
+  "purpose": "Exact source and data hashes for the completed 604-configuration revision campaign",
+  "sha256": {
+    "ieee_access_resubmit/experiments.py": "769f43a4f5bf73663738d2c345646b8db152552b9a2986129715b5ac6e469c5e",
+    "ieee_access_resubmit/protocol.json": "e2d14e58964dda9e2ad972770522279511434f54f010a86526cc7edb1b005c3c",
+    "hybrid_pathloss.py": "aa847594a50d032528905d428dfe7bb39c89b9c958eb2be77688fb69cdefd63e",
+    "revision_experiments.py": "26bd16ea096a410d2815148f0a4c475325df47b3ad4e8c041337794ce5dec9dd",
+    "data/samples.csv": "0332836a044d8ca2b9b04eb18f48924a5e39724c9fbcea33ec9807e891687841",
+    "data/gateways.csv": "c7b2e2e25ab0e43aab511630579de4adf61cb36cbfd6279129b5bccbab1cd3cc"
+  },
+  "python": "3.12.3",
+  "packages": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "geopy": "2.5.0"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "purpose": "Reviewer-requested controls on the submitted Bonn snapshot; fixed before new test scores are inspected",
+  "common_split_seeds": [0, 1, 3, 4],
+  "radii_m": [0, 250, 500, 1000],
+  "minimum_development_rows": 100,
+  "configs": ["direct_height", "direct_height_anchor", "oh_height", "ldpl_height"],
+  "anchor_design": "a + b log10(distance_km) + c log10(height_m) + d log10(distance_km) log10(height_m); OLS on training gateway-by-10m-distance-bin medians; rank and coefficients saved",
+  "knn_candidates": [5, 10, 20, 50, 100],
+  "complexity": {
+    "reference": {"rf": {"n_estimators": 100}, "xgboost": {"n_estimators": 100}},
+    "shallow": {"rf": {"n_estimators": 100, "max_depth": 12, "min_samples_leaf": 3}, "xgboost": {"n_estimators": 100, "max_depth": 3, "learning_rate": 0.1}},
+    "regularized": {"rf": {"n_estimators": 300, "min_samples_leaf": 5}, "xgboost": {"n_estimators": 300, "max_depth": 6, "learning_rate": 0.05}}
+  },
+  "tuning": "For each configuration select RF, XGBoost and k separately by validation RMSE; equal averaging; same candidate counts and validation observations; report all three preregistered matched tree-complexity pairs as sensitivity checks",
+  "subsample_repetitions": 5,
+  "subsample_strata": ["count", "gateway", "gateway_tile"],
+  "subsample_configs": ["direct_height", "oh_height"],
+  "subsample_rng": "SeedSequence([20261117, split_seed, radius_m, repetition, stratum_number]); reuse each drawn partition across models",
+  "spatial_folds": 5,
+  "spatial_partition_seed": 314159,
+  "spatial_model_seeds": [0, 1, 2],
+  "spatial_radius_m": 500,
+  "spatial_folds_design": "KFold over unique original approximately 500-m tile labels, shuffled once; disjoint test tile sets cover the campaign once. Grouped validation on remaining tiles, then pairwise 500-m exclusion. Fixed partitions across model seeds. Overlapping training sets are not independent campaigns.",
+  "gateway_radii_m": [0, 250, 500],
+  "gateway_seed": 0,
+  "gateway_design": "Hold out all receptions of each receiver. Exclude every shared proxy packet group from development, then exclude development transmitter positions within radius of test positions. Split retained development by proxy packet group into training and 15% validation; no additional train-validation geographic buffer. Never relax radius for infeasible sites.",
+  "quality_sensitivity": "Apply reconstructible original PL >= FSPL filter within the precomputed original partitions; retain original campaign tile labels; do not reconstruct unavailable satellite, altitude, or road-snap filters. Run primary unbuffered/500m and original gateway comparisons if any rows change; otherwise record no-op with identical assignments."
+}

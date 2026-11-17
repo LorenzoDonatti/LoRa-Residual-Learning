@@ -18,7 +18,7 @@ learning, and residual learning on public urban LoRa measurements from Bonn, Ger
 The manuscript is not identified here as an accepted or published journal article;
 its final citation will be added when available.
 
-The implementation consists of **four Python files**. It downloads the public data,
+The original compact implementation consists of **four Python files**. The revised campaign uses `run_revision.py` and an exact source snapshot under `revision/`, preserving the code that generated its archived predictions. It downloads the public data,
 trains the models, and exports numerical results as CSV files. It is intended as an
 accessible research baseline for studying analytical models combined with machine learning.
 Numerical diagnostics include MAE, R², a training-mean baseline, paired cluster-bootstrap
@@ -44,15 +44,76 @@ models receive comparable receiver information and are tested farther from their
 training locations. The experiments compare gateway-height inputs, geographic
 exclusion, training sample counts, and transfer to an unseen gateway.
 
-The manuscript finds very similar direct and residual errors under local
-interpolation once height is available to both. Larger residual advantages appear
-for the Okumura–Hata (OH) anchor under spatial exclusion and receiver holdout.
-The controlled comparisons, rather than a new learning algorithm, are the focus
-of this work. Receiver holdouts assess receiver-site transfer within the same
-campaign; these results do not establish transfer to another city or frequency band
-or a buffered advantage for every analytical anchor.
+The controlled comparisons, rather than a new learning algorithm, are the focus.
+Supplying height to both models removes most of the apparent unbuffered residual
+advantage. The revised 500-m comparison retains a modest OH gain against direct
+learning supplied with both height and OH, but geographic composition also matters.
+After shared-packet removal and 500-m transmitter-position exclusion, OH residual
+learning is worse in macro RMSE over the eight feasible receiver holdouts. These
+results concern the Bonn campaign and do not establish transfer to another city.
 
-## Getting started
+## Revised experiments
+
+`run_revision.py` reproduces the reviewer-requested campaign using the unchanged
+experiment sources and protocol in `revision/`. The small source manifest checks
+both code and input-data hashes before execution. The data downloader uses a pinned
+upstream revision. The existing requirements are sufficient; no plotting packages
+are needed for these fits.
+
+```bash
+# Verify the frozen sources and download/check the exact data, without training.
+python run_revision.py --check-only
+
+# Start with the reconstructible quality-filter check (no models are fitted).
+python run_revision.py --stages quality
+
+# Run all six stages; completed configurations resume after provenance checks.
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=4 python run_revision.py --jobs 4
+```
+
+Individual stages can be selected with `--stages controls`, `tuning`, `spatial`,
+`gateways`, or `counts`. `--output` defaults to `results/revision_v1`. Reusing an
+output directory with different source/data hashes, package versions or thread
+counts is rejected. The full campaign is computationally substantial; it includes
+604 ensemble configurations, not 604 independent campaigns.
+
+| Stage | Added comparison | Ensemble configurations |
+|---|---|---:|
+| `controls` | Four feature/target configurations, four common seeds and four radii | 64 |
+| `tuning` | Equal-budget validation selection and three fixed complexity pairs at 500 m | 16 |
+| `spatial` | Five disjoint sets of test tiles, three model seeds, four configurations | 60 |
+| `gateways` | Shared-packet removal and 0/250/500-m exclusion; one infeasible site/radius | 104 |
+| `counts` | Five draws per split/radius; count, gateway and gateway/tile matching | 360 |
+| `quality` | Reconstructible path-loss versus FSPL filter; zero rows removed | 0 |
+
+Each run saves exact source-row assignments, retained gateway/tile counts, minimum
+separation, model candidates and validation scores, selected settings, test metrics
+and per-reception component/ensemble predictions. Infeasible partitions remain
+explicit. A code/data/environment manifest and source archive accompany the run.
+The original compact runner described below continues to export aggregate results.
+
+Reference results at 500 m (mean RMSE in dB over seeds 0, 1, 3, 4): direct + height
++ OH **8.928**, OH residual + height **8.642**, height-LDPL residual **8.864**.
+Validation-selected direct and OH residual results are **8.911** and **8.531**.
+For strict receiver transfer at 500 m, the eight-site macro errors are **8.953**
+and **9.391** respectively. Gateway 06df fails the fixed minimum validation count.
+The full original/revised predictions and editorial supplementary analyses are
+provided in the separate reproducibility package prepared with the manuscript.
+
+The released data do not include satellite count, altitude, or displacement before
+road alignment. Consequently, these experiments do not reconstruct all quality
+filters underlying the source publication's 112,372 retained measurements. The
+analyzed public release has 131,057 rows; all pass the reconstructible FSPL check.
+Intervals conditional on fitted models and variability across refits must remain
+separate. Overlapping training folds do not constitute independent replications.
+
+Run the revision's boundary checks from the `revision/` directory:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+## Getting started with the original compact experiments
 
 Use Python 3.12 or newer. Run the commands from this repository's root directory.
 
@@ -165,7 +226,7 @@ In `gateways.csv`, **macro RMSE** averages the receiver-specific RMSE values wit
 equal weight per gateway. **Pooled RMSE** weights squared errors by the number of
 test receptions before taking the square root.
 
-The scripts save aggregate errors, not per-reception predictions or trained models.
+The original compact scripts save aggregate errors, not per-reception predictions or trained models. The revised runner additionally saves per-reception predictions, as described above.
 CSV files can be opened in Excel, LibreOffice, or pandas. For example:
 
 ```python
