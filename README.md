@@ -97,8 +97,9 @@ Reference results at 500 m (mean RMSE in dB over seeds 0, 1, 3, 4): direct + hei
 Validation-selected direct and OH residual results are **8.911** and **8.531**.
 For strict receiver transfer at 500 m, the eight-site macro errors are **8.953**
 and **9.391** respectively. Gateway 06df fails the fixed minimum validation count.
-The full original/revised predictions and editorial supplementary analyses are
-provided in the separate reproducibility package prepared with the manuscript.
+The manuscript contains the scientific comparisons without a separate supplement.
+The commands above export the revised predictions and provenance records; the
+authors also retain the versioned original/revised outputs for reproducibility.
 
 The released data do not include satellite count, altitude, or displacement before
 road alignment. Consequently, these experiments do not reconstruct all quality
