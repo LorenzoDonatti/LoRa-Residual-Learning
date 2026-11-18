@@ -1,446 +1,104 @@
 # When Does Residual Learning Improve LoRa Path-Loss Prediction?
 
-**Companion implementation for the research manuscript by:**
-
+Companion code and reference results for the **IEEE Access manuscript** by
 [Lorenzo Moreira Donatti](https://orcid.org/0009-0001-7563-3422),
 [Tiago Bandeira Marchesan](https://orcid.org/0000-0002-5804-9531), and
-[Carlos Henrique Barriquello](https://orcid.org/0000-0003-4454-6809).
+[Carlos Henrique Barriquello](https://orcid.org/0000-0003-4454-6809),
+Federal University of Santa Maria, Brazil.
+Corresponding author: Carlos Henrique Barriquello — carlos.barriquello@ufsm.br.
+The manuscript is under revision; no acceptance or publication is claimed.
 
-Federal University of Santa Maria (UFSM), Santa Maria, Brazil.
+The study compares direct and residual RF/XGBoost/KNN ensembles using the public
+Bonn LoRa measurements. It controls receiver information, spatial separation,
+training-set composition, and transfer to a held-out gateway.
 
-**Corresponding author:** Carlos Henrique Barriquello — carlos.barriquello@ufsm.br.
+## Start here
 
-This repository accompanies *When Does Residual Learning Improve LoRa Path-Loss
-Prediction?*, the manuscript prepared for **IEEE Access**.
-It provides a compact implementation of its main
-numerical experiments, comparing classical propagation models, direct machine
-learning, and residual learning on public urban LoRa measurements from Bonn, Germany.
-The manuscript is not identified here as an accepted or published journal article;
-its final citation will be added when available.
+| Your goal | Where to go |
+|---|---|
+| Read the saved results without training | [Reference tables and table-to-file map](reference/README.md) |
+| Obtain exact partitions, settings and run records | [Reproducibility v1 release](https://github.com/LorenzoDonatti/LoRa-Residual-Learning/releases/tag/reproducibility-v1) |
+| Reproduce the revised campaign | Commands below and [frozen protocol](revision/ieee_access_resubmit/protocol.json) |
+| Reproduce the original controlled comparisons | [Frozen original sources](reference/README.md#original-comparisons) |
+| Explore the compact baseline implementation | [Original experiment guide](docs/original_experiments.md) |
 
-The original compact implementation consists of **four Python files**. The revised campaign uses `run_revision.py` and an exact source snapshot under `revision/`, preserving the code that generated its archived predictions. It downloads the public data,
-trains the models, and exports numerical results as CSV files. It is intended as an
-accessible research baseline for studying analytical models combined with machine learning.
-Numerical diagnostics include MAE, R², a training-mean baseline, paired cluster-bootstrap
-intervals, and distance-bin errors; no plotting dependencies are needed.
+## Reference findings
 
-## Research overview
+Mean test RMSE in dB; lower is better. The first two rows use the same four
+split seeds. The last row averages the same eight feasible receiver sites.
 
-An empirical path-loss model describes a large-scale propagation trend. A residual
-learner estimates the difference between that prediction and the measured loss:
+| Prediction setting | Direct + height + OH | OH residual + height |
+|---|---:|---:|
+| 500-m spatial exclusion, fixed settings | 8.928 | 8.642 |
+| 500-m spatial exclusion, validation-selected settings | 8.911 | 8.531 |
+| Held-out receiver, shared-packet removal and 500-m position exclusion | 8.953 | 9.391 |
 
-```text
-training residual = measured path loss − classical prediction
-hybrid prediction = classical prediction + predicted residual
-```
+Supplying receiver height removes most of the apparent residual advantage under
+local interpolation. A modest OH gain remains under spatial exclusion, depends
+on the anchor and geographic training support, and reverses under strict receiver
+transfer. These results concern one campaign, not independent cities or network
+coverage. Conditional bootstrap intervals and refit variation have distinct meanings.
 
-Three learners—Random Forest (RF), XGBoost, and distance-weighted k-nearest
-neighbors (KNN)—estimate this correction independently. Their predictions are
-combined with equal weights. Direct ensembles use the same learner families to
-predict path loss directly.
+## Reproduce the revised campaign
 
-The main question is whether the benefit of residual learning persists when the
-models receive comparable receiver information and are tested farther from their
-training locations. The experiments compare gateway-height inputs, geographic
-exclusion, training sample counts, and transfer to an unseen gateway.
-
-The controlled comparisons, rather than a new learning algorithm, are the focus.
-Supplying height to both models removes most of the apparent unbuffered residual
-advantage. The revised 500-m comparison retains a modest OH gain against direct
-learning supplied with both height and OH, but geographic composition also matters.
-After shared-packet removal and 500-m transmitter-position exclusion, OH residual
-learning is worse in macro RMSE over the eight feasible receiver holdouts. These
-results concern the Bonn campaign and do not establish transfer to another city.
-
-## Revised experiments
-
-`run_revision.py` reproduces the reviewer-requested campaign using the unchanged
-experiment sources and protocol in `revision/`. The small source manifest checks
-both code and input-data hashes before execution. The data downloader uses a pinned
-upstream revision. The existing requirements are sufficient; no plotting packages
-are needed for these fits.
-
-```bash
-# Verify the frozen sources and download/check the exact data, without training.
-python run_revision.py --check-only
-
-# Start with the reconstructible quality-filter check (no models are fitted).
-python run_revision.py --stages quality
-
-# Run all six stages; completed configurations resume after provenance checks.
-OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=4 python run_revision.py --jobs 4
-```
-
-Individual stages can be selected with `--stages controls`, `tuning`, `spatial`,
-`gateways`, or `counts`. `--output` defaults to `results/revision_v1`. Reusing an
-output directory with different source/data hashes, package versions or thread
-counts is rejected. The full campaign is computationally substantial; it includes
-604 ensemble configurations, not 604 independent campaigns.
-
-| Stage | Added comparison | Ensemble configurations |
-|---|---|---:|
-| `controls` | Four feature/target configurations, four common seeds and four radii | 64 |
-| `tuning` | Equal-budget validation selection and three fixed complexity pairs at 500 m | 16 |
-| `spatial` | Five disjoint sets of test tiles, three model seeds, four configurations | 60 |
-| `gateways` | Shared-packet removal and 0/250/500-m exclusion; one infeasible site/radius | 104 |
-| `counts` | Five draws per split/radius; count, gateway and gateway/tile matching | 360 |
-| `quality` | Reconstructible path-loss versus FSPL filter; zero rows removed | 0 |
-
-Each run saves exact source-row assignments, retained gateway/tile counts, minimum
-separation, model candidates and validation scores, selected settings, test metrics
-and per-reception component/ensemble predictions. Infeasible partitions remain
-explicit. A code/data/environment manifest and source archive accompany the run.
-The original compact runner described below continues to export aggregate results.
-
-Reference results at 500 m (mean RMSE in dB over seeds 0, 1, 3, 4): direct + height
-+ OH **8.928**, OH residual + height **8.642**, height-LDPL residual **8.864**.
-Validation-selected direct and OH residual results are **8.911** and **8.531**.
-For strict receiver transfer at 500 m, the eight-site macro errors are **8.953**
-and **9.391** respectively. Gateway 06df fails the fixed minimum validation count.
-The manuscript contains the scientific comparisons without a separate supplement.
-The commands above export the revised predictions and provenance records; the
-authors also retain the versioned original/revised outputs for reproducibility.
-
-The released data do not include satellite count, altitude, or displacement before
-road alignment. Consequently, these experiments do not reconstruct all quality
-filters underlying the source publication's 112,372 retained measurements. The
-analyzed public release has 131,057 rows; all pass the reconstructible FSPL check.
-Intervals conditional on fitted models and variability across refits must remain
-separate. Overlapping training folds do not constitute independent replications.
-
-Run the revision's boundary checks from the `revision/` directory:
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-## Getting started with the original compact experiments
-
-Use Python 3.12 or newer. Run the commands from this repository's root directory.
+Python 3.12 was used for the revised campaign. Install the pinned dependencies:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+python run_revision.py --check-only
 ```
 
-On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1`.
-
-Start with one split and one seed:
+The last command downloads the pinned public inputs and verifies their hashes
+and the frozen sources, without fitting models. Then choose a stage or run all:
 
 ```bash
-python run.py --study controls --protocols random --seeds 0 --output results/quickstart
+python run_revision.py --stages quality
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=4 python run_revision.py --stages controls --jobs 4
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=4 python run_revision.py --jobs 4
 ```
 
-This evaluates a training-mean baseline and trains all seven controlled-input configurations on the **complete dataset**,
-using one random partition. It is a smaller experiment, not a subsample of the data.
-The first run downloads `samples.csv` and `gateways.csv` into `data/`.
+| Stage | Purpose | Ensemble configurations |
+|---|---|---:|
+| `controls` | Four feature/target configurations across four radii and four seeds | 64 |
+| `tuning` | Equal-budget validation selection at 500 m | 16 |
+| `spatial` | Five disjoint test folds with three model seeds | 60 |
+| `gateways` | Packet and position exclusion for receiver holdouts | 104 |
+| `counts` | Repeated count, gateway and geographic-composition controls | 360 |
+| `quality` | Reconstructible FSPL filter; zero observations removed | 0 |
 
-Run all implemented experiments with the default five seeds:
+The full run is computationally substantial: **604 ensemble configurations**.
+Outputs go to `results/revision_v1/`; completed configurations resume after
+provenance checks. Each run records partitions, model candidates and selections,
+metrics, and per-reception predictions. Keep `--jobs 4` for the archived setup;
+small platform-dependent floating-point differences can remain.
+
+The data release lacks satellite count, altitude and pre-alignment displacement,
+so it cannot reproduce every quality filter used by the source publication.
+The archived preprocessing audit documents this limitation.
+
+## Verify saved artifacts without training
+
+These checks use only Python's standard library:
 
 ```bash
-python run.py
+python reference/verify.py
+python reference/verify.py --download
 ```
 
-The complete run trains hundreds of models and may take hours depending on the
-machine. Four model threads are requested by default. `--jobs` changes that setting.
-The required packages are pinned in `requirements.txt`; numerical differences
-across platforms or dependency versions remain possible.
+The second command verifies the release archive and every contained file. It
+downloads about 19 MB into the ignored `results/reference/` directory. The Git
+repository holds only the small, browsable reference tables and source files.
+See [reference documentation](reference/README.md) for coverage and provenance.
 
-## What does a run produce?
+## Repository layout
 
-### 1. Progress and results in the terminal
+- `run_revision.py`, `revision/`: entry point and frozen experiment sources.
+- `reference/`: saved tables, integrity manifest, and archive verifier.
+- `run.py`, `data.py`, `models.py`, `experiments.py`: compact exploratory runner.
+- `docs/original_experiments.md`: options and output schemas for that runner.
+- `CITATION.cff`: author and citation metadata.
 
-For the quick-start command, each progress line reports the **ensemble's test RMSE
-in dB** for one configuration. Lower is better. Example values from seed zero:
-
-```text
-131,057 receptions; 9 gateways
-random seed=0  direct_basic: 6.4349 dB
-random seed=0  direct_height: 6.1214 dB
-random seed=0  direct_anchor: 6.1638 dB
-random seed=0  oh_basic: 6.2923 dB
-random seed=0  oh_height: 6.1222 dB
-random seed=0  ldpl_basic: 6.4256 dB
-random seed=0  oh_continuous: 6.2908 dB
-```
-
-After fitting, the terminal also prints an aggregate table containing the baseline,
-each individual learner, and its ensemble, followed by the output directory.
-This command produces 29 metric rows (one constant baseline plus 28 learned-model
-results) and six paired bootstrap comparisons.
-These seed-zero values are not the five-seed means reported in the manuscript.
-
-### 2. CSV files
-
-```text
-results/quickstart/
-├── runs.csv
-├── summary.csv
-├── comparisons.csv
-└── distance_errors.csv
-```
-
-Gateway experiments additionally generate `gateways.csv`.
-
-| File | Contents | Typical use |
-|---|---|---|
-| `runs.csv` | RMSE, MAE, and R² per component or ensemble, per configuration and partition; also classical/linear baselines when requested | Compare individual fits and inspect selected KNN settings |
-| `summary.csv` | Mean, sample standard deviation, and valid-run count for RMSE, MAE, and R² per protocol/configuration/model | Compare repeated-partition results |
-| `comparisons.csv` | Seed-zero paired cluster-bootstrap differences in RMSE and conditional 95% intervals | Assess uncertainty in the paper comparisons |
-| `distance_errors.csv` | Seed-zero MAE, RMSE, and reception counts in 0.5-km distance intervals | Inspect distance-dependent errors without plots |
-| `gateways.csv` | Macro and pooled test RMSE per configuration/model across held-out receivers | Compare receiver transfer |
-
-For example, an ensemble row in `runs.csv` identifies `protocol=random`, `seed=0`,
-`config=oh_height`, `model=ensemble`, and test RMSE approximately **6.1222 dB**.
-That partition contains **98,292 training**, **13,106 validation**, and **19,659 test**
-receptions. The same configuration has separate `rf`, `xgboost`, and `knn` rows.
-
-| Column in `runs.csv` | Meaning |
-|---|---|
-| `protocol` | `random`, `packet`, `spatial_500m`, `buffer250`, `size250`, `gateway`, etc. |
-| `seed` | Random seed for the partition and learner fitting |
-| `gateway` | Held-out receiver identifier; empty for other experiments |
-| `config` | Feature/target configuration, listed below; for classical baselines, the anchor name |
-| `model` | `rf`, `xgboost`, `knn`, `ensemble`, `linear`, `classical`, or `constant` |
-| `train_rows`, `validation_rows`, `test_rows` | Number of receptions in each partition |
-| `validation_rmse_db` | Component validation RMSE; not emitted for ensembles or classical/linear rows |
-| `test_rmse_db` | Test RMSE of the final path-loss predictions, including the anchor for residual models |
-| `test_mae_db` | Mean absolute test error in dB |
-| `test_r2` | Test coefficient of determination; undefined for fewer than two observations or a constant target |
-| `selected_k` | Validation-selected neighbor count for KNN; empty for other models |
-| `status` | `infeasible` for a partition with fewer than 100 training or validation rows; otherwise empty |
-
-Infeasible rows use `config=infeasible` and `model=none`, with no error estimate.
-They remain visible in `runs.csv` and are excluded from the summary.
-
-`summary.csv` retains `protocol,config,model,mean,std,count` for RMSE and adds
-`mae_db_mean`, `mae_db_std`, `mae_db_count`, `r2_mean`, `r2_std`, and `r2_count`.
-Each metric is aggregated across runs; this is not a pooled R². Undefined R² values
-are excluded from its mean and count. For the quick-start
-run, `count=1` and `std` is empty (`NaN` in the terminal): one observation has no
-sample standard deviation. For the default repeated-split study, count is normally
-five, or four for the feasible 1,000-m runs. Gateway summaries average nine receivers;
-their standard deviation describes differences between receivers, not between seeds.
-
-In `gateways.csv`, **macro RMSE** averages the receiver-specific RMSE values with
-equal weight per gateway. **Pooled RMSE** weights squared errors by the number of
-test receptions before taking the square root.
-
-The original compact scripts save aggregate errors, not per-reception predictions or trained models. The revised runner additionally saves per-reception predictions, as described above.
-CSV files can be opened in Excel, LibreOffice, or pandas. For example:
-
-```python
-import pandas as pd
-
-summary = pd.read_csv("results/quickstart/summary.csv")
-print(summary.loc[summary["model"].eq("ensemble")])
-```
-
-### 3. Statistical and distance diagnostics
-
-Every feasible partition includes `config=training_mean`, `model=constant`, which
-predicts the training-target mean for all test receptions. It never uses test or
-validation targets to set the prediction. Gateway experiments also report
-uncorrected OH alongside the learned models.
-
-`comparisons.csv` uses **2,000 paired cluster-bootstrap replicates**, with RNG seed
-zero, for fits trained on split seed zero. Random-row and packet-grouped tests
-resample proxy packet groups; spatial and buffered tests resample held-out 500-m
-tiles defined using the full campaign grid. Entire clusters are sampled with
-replacement, and both models receive exactly the same sampled clusters. No models
-are refitted. The 2.5th and 97.5th percentiles give the conditional 95% interval.
-
-The comparison columns identify configurations/models A and B. `point_db` is
-**RMSE(A) − RMSE(B)**; negative values favor A. `lower_db` and `upper_db` are the
-interval endpoints. `clusters` and `repetitions` document the resampling size.
-The implemented comparisons, when both fits are present, are:
-
-- Initial OH ensemble versus each of its RF, XGBoost, and KNN components.
-- Height-augmented OH ensemble versus the height-augmented direct ensemble.
-- Initial OH ensemble versus the height-augmented direct ensemble.
-- Initial OH ensemble versus the basic direct ensemble.
-
-These intervals describe test-cluster variation conditional on fitted models and
-chosen hyperparameters. They do not replace variation across training seeds,
-include no multiple-comparison adjustment, and are not equivalence tests.
-No bootstrap is emitted for sample-count controls or gateway holdouts.
-If seed zero or a required pair is absent, the corresponding comparisons are absent;
-a file with only its header means no eligible comparisons were run.
-
-`distance_errors.csv` covers every evaluated model for seed zero, including gateway
-holdouts. Bins are half-open `[lower_km, upper_km)` intervals of width 0.5 km.
-`count` is the number of test receptions; `mae_db` and `rmse_db` describe errors
-within that bin. Empty bins are omitted, and sparse bins are retained so their
-limited support remains visible. For the paper's distance analysis, select
-`protocol=packet`, `config=oh_basic`, and bins with `count >= 100`.
-
-## Experiment options
-
-| `--study` | Experiments |
-|---|---|
-| `all` (default) | All experiments below, with duplicate configurations fitted once per main partition |
-| `controls` | Seven configurations comparing direct/residual targets, gateway height, an OH input feature, and distance resolution |
-| `anchors` | Five classical baselines, linear controls, and residual RF/XGBoost/KNN ensembles for each anchor |
-| `reference` | Classical/linear baselines, the initial OH ensemble, and its distance-only ablation |
-| `buffers` | Fixed spatial test tiles with 250-, 500-, and 1,000-m exclusion radii |
-| `size` | Random subsets of the original development sets matching buffered training/validation counts |
-| `gateway` | Nine receiver holdouts comparing direct+height, residual+height, and the initial OH ensemble |
-
-```bash
-python run.py --study anchors --output results/anchors
-python run.py --study reference --output results/reference
-python run.py --study buffers --radii 250 500 1000 --output results/buffers
-python run.py --study size --output results/size
-python run.py --study gateway --output results/gateway
-```
-
-The main protocols are:
-
-- **`random`:** individual gateway receptions are assigned independently.
-- **`packet`:** receptions with the same date/packet/position key remain together.
-- **`spatial_500m`:** complete transmitter-position tiles remain together. A
-  500-m tile does not guarantee a 500-m distance from the nearest training point.
-
-Buffered experiments preserve each seed's original spatial test set and remove
-nearby training and validation observations. Size controls match the retained row
-counts without geographic exclusion. Seed two at 1,000 m has only 87 validation
-receptions and is reported as infeasible.
-
-`--seeds 0 1 2 3 4` and `--protocols random packet spatial_500m` select the main
-partitions. Buffered and size studies always use the spatial partition;
-`--protocols` does not alter them. Gateway holdouts always use seed zero and a
-packet-grouped validation subset of the remaining receivers, independent of
-`--seeds` and `--protocols`.
-
-Other options: `--jobs 4`, `--data data`, and `--output results`.
-See `python run.py --help` for the complete command-line interface.
-
-**Each execution overwrites its output files.** Use separate output directories
-for separate experiments. `runs.csv`, `comparisons.csv`, and `distance_errors.csv` are written progressively; summaries are
-created after a successful run. There is no automatic resume mechanism. When
-reusing a directory, remove older outputs first so stale summaries are not mistaken
-for the results of an interrupted run.
-
-## Model configurations
-
-The basic inputs are transmitter latitude, longitude, and link distance. Trees use
-distance rounded to 10 m; KNN and linear regression use log-distance. KNN and
-linear regression use training-fitted standardization.
-
-| Configuration | Target | Learner inputs / anchor |
-|---|---|---|
-| `direct_basic` | Measured path loss | Basic inputs |
-| `direct_height` | Measured path loss | Basic inputs + gateway height |
-| `direct_anchor` | Measured path loss | Basic inputs + OH prediction |
-| `oh_basic` | OH residual | Basic inputs; OH added back at prediction |
-| `oh_height` | OH residual | Basic inputs + gateway height; OH added back |
-| `ldpl_basic` | Bonn LDPL residual | Basic inputs; training-fitted LDPL added back |
-| `oh_continuous` | OH residual | Tree distance at 1-m resolution; KNN unchanged |
-| `oh_distance_only` | OH residual | Distance/log-distance only; OH anchor unchanged |
-| `fspl_residual` | FSPL residual | Basic inputs; FSPL added back |
-| `oulu_residual` | Oulu LDPL residual | Basic inputs; Oulu LDPL added back |
-| `winner_residual` | Winner+ residual | Basic inputs; Winner+ added back |
-
-RF and XGBoost use 100 trees. KNN selects k from {5, 10, 20, 50, 100} using
-validation RMSE. Ensemble predictions are averaged with weights of one third
-**before** RMSE is calculated. The nominal main split proportions are 75/10/15;
-grouped partitions can have different reception counts. Bonn LDPL is fitted on
-training distance-bin medians only. SVR is not part of this implementation.
-
-## Reference results from the manuscript
-
-The following values are comparison targets, not hard-coded model outputs.
-RMSE is in dB. Split results are means over five seeds, except four feasible runs
-at 1,000 m; receiver results use nine holdouts.
-
-| Evaluation | Direct + height | OH residual + height |
-|---|---:|---:|
-| Random receptions | 6.19 | 6.19 |
-| Packet groups | 6.19 | 6.19 |
-| Spatial tiles, no buffer | 7.07 | 7.04 |
-| 250-m exclusion | 7.93 | 7.83 |
-| 500-m exclusion | 8.76 | 8.46 |
-| 1,000-m exclusion | 11.77 | 10.19 |
-| Unseen gateway, macro | 9.84 | 9.34 |
-| Unseen gateway, pooled | 10.63 | 9.72 |
-
-The original OH ensemble without explicit height input to its learners yields
-approximately 6.35, 6.35, and 7.52 dB under random, packet and spatial partitions.
-
-This compact companion implements the main RMSE comparisons, MAE/R² metrics,
-training-mean baseline, conditional paired bootstrap intervals, and numerical
-distance-bin errors. Publication figures and plotting are outside its scope. The reference values are rounded; seed selection and the
-execution environment matter when comparing results.
-
-## Repository structure
-
-```text
-.
-├── data.py              # Download, preprocessing, classical models, partitions
-├── models.py            # Learners and equal direct/residual ensembles
-├── experiments.py       # Experimental configurations and validation studies
-├── run.py               # Command-line entry point and numerical output
-├── requirements.txt
-├── README.md
-├── CITATION.cff         # Title, authors, and ORCIDs for citation tools
-└── .gitignore
-```
-
-`data/` and `results/` are created at runtime. No manuscript files, image assets,
-archived results, or dataset copies are required in the repository.
-
-## Dataset and attribution
-
-The public [Bonn LoRa survey](https://github.com/mclab-hbrs/lora-bonn) contains
-131,057 received-link records at 868 MHz from nine gateways. The downloader uses
-upstream revision `74d9e29a55eae6ba0909738e9f623f6e7219e902`. For offline execution,
-place `samples.csv` and `gateways.csv` in the directory supplied through `--data`.
-
-The path-loss target follows the source processing:
-
-```text
-received packet power (dBm) = RSSI + min(SNR, 0)
-path loss (dB)              = 15 − received packet power
-```
-
-Only successful receptions are available. The timestamp has date precision,
-so date/packet/position groups are proxy transmission identifiers. The dataset
-supports received-link prediction, not direct estimation of packet delivery ratio.
-
-**Original dataset publication:** Michael Rademacher, Hendrik Linka, Thorsten
-Horstmann, and Martin Henze, “Path Loss in Urban LoRa Networks: A Large-Scale
-Measurement Study,” IEEE VTC2021-Fall,
-[DOI: 10.1109/VTC2021-Fall52928.2021.9625531](https://doi.org/10.1109/VTC2021-Fall52928.2021.9625531).
-
-The data are distributed under
-[Data licence Germany – attribution – version 2.0](https://www.govdata.de/dl-de/by-2-0).
-Retain the original dataset attribution when using or redistributing the data.
-This data license does not assign a license to the companion implementation.
-
-## Citing this work
-
-Please cite the companion manuscript and the original dataset publication when
-using these experiments. The entry below identifies the manuscript; it does not
-claim journal publication or assign a DOI. It will be replaced with the final bibliographic
-record when available.
-
-```bibtex
-@misc{donatti2026residual_lora,
-  author = {Donatti, Lorenzo Moreira and Marchesan, Tiago Bandeira and
-            Barriquello, Carlos Henrique},
-  title = {When Does Residual Learning Improve {LoRa} Path-Loss Prediction?},
-  year = {2026},
-  note = {Research manuscript prepared for IEEE Access},
-  howpublished = {Companion implementation: \url{https://github.com/LorenzoDonatti/LoRa-Residual-Learning}}
-}
-```
-
-## Acknowledgments
-
-This work was supported by the Coordenação de Aperfeiçoamento de Pessoal de Nível
-Superior (CAPES), Brazil — Finance Code 001; the Federal University of Santa Maria;
-and Santo Antônio Energia through ANEEL R&D project PD-06683-0123.
-
-The authors acknowledge the Bonn survey authors for making their measurement
-data publicly available.
+The release preserves numerical evidence and partitions; the manuscript contains
+the scientific results without a separate scientific supplement.

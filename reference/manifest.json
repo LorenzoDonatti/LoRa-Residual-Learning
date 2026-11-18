@@ -1,0 +1,84 @@
+{
+  "version": "reproducibility-v1",
+  "experiment_source_commit": "8f9564ef22c0390191ac0d8cc9fadf44ee9f97f1",
+  "source_and_data_sha256": {
+    "ieee_access_resubmit/experiments.py": "769f43a4f5bf73663738d2c345646b8db152552b9a2986129715b5ac6e469c5e",
+    "ieee_access_resubmit/protocol.json": "e2d14e58964dda9e2ad972770522279511434f54f010a86526cc7edb1b005c3c",
+    "hybrid_pathloss.py": "aa847594a50d032528905d428dfe7bb39c89b9c958eb2be77688fb69cdefd63e",
+    "revision_experiments.py": "26bd16ea096a410d2815148f0a4c475325df47b3ad4e8c041337794ce5dec9dd",
+    "data/samples.csv": "0332836a044d8ca2b9b04eb18f48924a5e39724c9fbcea33ec9807e891687841",
+    "data/gateways.csv": "c7b2e2e25ab0e43aab511630579de4adf61cb36cbfd6279129b5bccbab1cd3cc",
+    "size_matched_controls.py": "2f0b2aef8633f729b5f4ee3b2e6b33f07ef392b90bc647960b9a06e3a947bd8f",
+    "gateway_matched_controls.py": "c37cea4a8b83ae85ed31d9783dadb74d5b3ad3278bb4f09d3e59922daa3ff308"
+  },
+  "archive": {
+    "url": "https://github.com/LorenzoDonatti/LoRa-Residual-Learning/releases/download/reproducibility-v1/reference_artifacts_v1.zip",
+    "filename": "reference_artifacts_v1.zip",
+    "sha256": "a480a27b66391bc4e699d25d7201555a210674d88796acb5f16e730bbc7e365d",
+    "bytes": 19457599,
+    "members": 1438
+  },
+  "tables": {
+    "original_metrics.csv": {
+      "source": "results/submission_controls/metrics.csv",
+      "sha256": "fb35c15099ab316318898067f98a5ddc99abfb0c72b25cf0450c8383fff21bcd"
+    },
+    "original_gateway_metrics.csv": {
+      "source": "results/gateway_matched_controls/metrics.csv",
+      "sha256": "5e3c2494453352c08a22fce43ea4542559a25808599239e0f34e747376b7cec8"
+    },
+    "original_count_metrics.csv": {
+      "source": "results/size_matched_controls/metrics.csv",
+      "sha256": "aa27dbdc6ce84628d0c7b8ecd6e99c615a3fca480cb798a01cd9fb530cba3916"
+    },
+    "revised_metrics.csv": {
+      "source": "ieee_access_resubmit/reporting/new_metrics.csv",
+      "sha256": "006d1fb5233c541398d971b8f159fb96341f725b4e2a9274d1ce41f4bf2ec679"
+    },
+    "exclusion_summary.csv": {
+      "source": "ieee_access_resubmit/reporting/new_controls_summary.csv",
+      "sha256": "45be553d70fdbd10ccdddcd98d556fdcd7f1704b6af21cc9fd2874d37d141f0a"
+    },
+    "complexity_metrics.csv": {
+      "source": "ieee_access_resubmit/reporting/complexity_metrics.csv",
+      "sha256": "d10f381c8544aa013acbea60a8b2f6374380b9fa9f112599aa1efc7751f96ace"
+    },
+    "tuning_summary.csv": {
+      "source": "ieee_access_resubmit/reporting/tuning_summary.csv",
+      "sha256": "ebc724e94f30870a13970cf2ec0e15575af2a3cc4e9fed371f419a5ffd34b254"
+    },
+    "conditional_intervals.csv": {
+      "source": "ieee_access_resubmit/reporting/new_conditional_intervals.csv",
+      "sha256": "0ba62ebf112034d65788deda7c3b01995373c77accc94fabb54ad11d8fc6cfec"
+    },
+    "gateway_comparison.csv": {
+      "source": "ieee_access_resubmit/reporting/gateway_paired.csv",
+      "sha256": "bc8fc755ab83d8010976f84f8b27d0ce390cb141371813fa974f049d61bb9ada"
+    },
+    "gateway_transfer.csv": {
+      "source": "ieee_access_resubmit/reporting/strict_gateway_summary.csv",
+      "sha256": "8a8151738329631f750c0478fc8486ede5d25c39606dd84a2954534a27ef90db"
+    },
+    "count_controls.csv": {
+      "source": "ieee_access_resubmit/reporting/repeated_counts_summary.csv",
+      "sha256": "33c90fc44f346fbe4eef25c3efd96c0dc1d64e66fa332ab014cc0b2f8a8f3d9b"
+    },
+    "spatial_refits.csv": {
+      "source": "ieee_access_resubmit/reporting/spatial_fold_seed_pairs.csv",
+      "sha256": "5d9eedbc325d52d89e009cdf934105a6b398c36fe9a96c67e20f89e2def8d878"
+    },
+    "preprocessing.csv": {
+      "source": "ieee_access_resubmit/reporting/preprocessing_stages.csv",
+      "sha256": "69d6c2be05e7bb37ec0522fd489e8d06b2c2b300435d31ade06562e7c2dbfc51"
+    }
+  },
+  "verified_revision_configurations": {
+    "controls": 64,
+    "tuning": 16,
+    "spatial": 60,
+    "gateways": 104,
+    "counts": 360
+  },
+  "original_partition_files": 53,
+  "revision_partition_files": 242
+}
